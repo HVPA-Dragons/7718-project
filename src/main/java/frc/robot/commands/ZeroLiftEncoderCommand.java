@@ -1,0 +1,26 @@
+package frc.robot.commands;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.LiftShooterSubsystem;
+
+public class ZeroLiftEncoderCommand extends Command {
+    private LiftShooterSubsystem liftShooterSubsystem;
+
+    public ZeroLiftEncoderCommand(LiftShooterSubsystem liftShooterSubsystem) {
+        this.liftShooterSubsystem = liftShooterSubsystem;
+
+        addRequirements(liftShooterSubsystem);
+    }
+
+    @Override
+    public void execute() {
+        liftShooterSubsystem.readNormalizedLiftEncoder();
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        
+        
+
+    }
+}
