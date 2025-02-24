@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.LiftUpCommand;
 import frc.robot.commands.ReadLiftEncoderCommand;
 import frc.robot.commands.ZeroLiftEncoderCommand;
+import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LiftShooterSubsystem;
@@ -61,9 +62,12 @@ public class RobotContainer {
         Command liftUpCommand = new LiftUpCommand(liftShooter);
         Command readLiftEncoderCommand = new ReadLiftEncoderCommand(liftShooter);
         Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
+        Command intakeCoralCommand = new IntakeCoralCommand(liftShooter);
+
 
         joystick.a().whileTrue(liftUpCommand);
         joystick.b().whileTrue(zeroLiftEncoderCommand);
+        joystick.y().whileTrue(intakeCoralCommand);
             
         
         
@@ -77,7 +81,7 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystick.rightBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

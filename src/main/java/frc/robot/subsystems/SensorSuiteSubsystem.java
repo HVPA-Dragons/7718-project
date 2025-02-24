@@ -6,17 +6,17 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SensorSuiteSubsystem extends SubsystemBase {
 
-    private final DigitalInput IRSensor;
+    private final DigitalInput shooterProximitySensor1;
+
 
     public SensorSuiteSubsystem() {
         // Port for the sensors
-        IRSensor = new DigitalInput(0);
-
+        shooterProximitySensor1 = new DigitalInput(11);
     }
 
     public void ReadIRSensor() {
         // TODO use the sensor for stuff
-        System.out.println(IRSensor.get());
+        System.out.println(shooterProximitySensor1.get());
 
     }
 
