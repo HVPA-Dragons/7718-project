@@ -18,13 +18,30 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.commands.LiftUpCommand;
-import frc.robot.commands.ReadLiftEncoderCommand;
-import frc.robot.commands.ZeroLiftEncoderCommand;
+//import frc.robot.commands.LiftUpCommand;
+//import frc.robot.commands.ReadLiftEncoderCommand;
+//import frc.robot.commands.ZeroLiftEncoderCommand;
 import frc.robot.commands.IntakeCoralCommand;
+import frc.robot.commands.StopIntakeCoralCommand;
+import frc.robot.commands.ShootCoralCommand;
+import frc.robot.commands.StopShootCoralCommand;
+import frc.robot.commands.IntakeAlgaeCommand;
+import frc.robot.commands.StopIntakeAlgaeCommand;
+import frc.robot.commands.ShootAlgaeCommand;
+import frc.robot.commands.StopShootAlgaeCommand;
+import frc.robot.commands.SetIntakeCommand;
+import frc.robot.commands.IntakeLevelCommand;
+import frc.robot.commands.SetScoringAngleCommand;
+import frc.robot.commands.AlignLimelightCommand;
+import frc.robot.commands.Level1Command;
+import frc.robot.commands.Level2Command;
+import frc.robot.commands.Level3Command;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LiftShooterSubsystem;
+import frc.robot.subsystems.LimelightHelpersSubsystem;
+
+
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -40,6 +57,7 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController joystick = new CommandXboxController(0);
+    private final CommandXboxController joystick2 = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -53,38 +71,69 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-joystick2.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick2.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-joystick2.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
         var liftShooter = new LiftShooterSubsystem();
-        Command liftUpCommand = new LiftUpCommand(liftShooter);
-        Command readLiftEncoderCommand = new ReadLiftEncoderCommand(liftShooter);
-        Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
+        var limelightHelpers = new LimelightHelpersSubsystem();
+        //Command liftUpCommand = new LiftUpCommand(liftShooter);
+        //Command readLiftEncoderCommand = new ReadLiftEncoderCommand(liftShooter);
+        //Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
         Command intakeCoralCommand = new IntakeCoralCommand(liftShooter);
+        Command stopIntakeCoralCommand = new StopIntakeCoralCommand(liftShooter);
+        Command shootCoralCommand = new ShootCoralCommand(liftShooter);
+        Command stopShootCoralCommand = new StopShootCoralCommand(liftShooter);
+        Command setIntakeCommand = new SetIntakeCommand(liftShooter);
+        Command setScoringAngleCommand = new SetScoringAngleCommand(liftShooter);
+        Command intakeAlgaeCommand = new IntakeAlgaeCommand(liftShooter);
+        Command stopIntakeAlgaeCommand = new StopIntakeAlgaeCommand(liftShooter);
+        Command shootAlgaeCommand = new ShootAlgaeCommand(liftShooter);
+        Command stopShootAlgaeCommand = new StopShootAlgaeCommand(liftShooter);
+        Command intakeLevelCommand = new IntakeLevelCommand(liftShooter);
+        Command level1Command = new Level1Command(liftShooter);
+        Command level2Command = new Level2Command(liftShooter);
+        Command level3Command = new Level3Command(liftShooter);
+        Command alignLimelightCommand = new AlignLimelightCommand(limelightHelpers);
+    
+       
+        
 
-
-        joystick.a().whileTrue(liftUpCommand);
-        joystick.b().whileTrue(zeroLiftEncoderCommand);
-        joystick.y().whileTrue(intakeCoralCommand);
-            
+        joystick2.a().onTrue(alignLimelightCommand); // Press A to align with AprilTag
+        joystick.a().onTrue(intakeLevelCommand); // trough level
+        joystick.b().onTrue(level1Command); // reef level 1 and algae processor
+        joystick.y().onTrue(level2Command); // reef level 2 
+        joystick.x().onTrue(level3Command); // reef level 3
+        joystick.leftTrigger().onTrue(intakeCoralCommand); // intakes coral
+        joystick.leftTrigger().onFalse(stopIntakeCoralCommand); // stops intake 
+        joystick.rightTrigger().onTrue(shootCoralCommand); // shoots coral
+        joystick.rightTrigger().onFalse(stopShootCoralCommand); // stops shooter
+        joystick.leftBumper().onTrue(setIntakeCommand); // sets intake height and angle
+        joystick.rightBumper().onTrue(setScoringAngleCommand); // sets shooter to scoring angle
+        joystick.povRight().onTrue(intakeAlgaeCommand); // intakes algae
+        joystick.povRight().onFalse(stopIntakeAlgaeCommand); // stops intake
+        joystick.povLeft().onTrue(shootAlgaeCommand); // shoots algae
+        joystick.povLeft().onFalse(stopShootAlgaeCommand); // stops shooter
+    
+       
         
         
         
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        joystick2.back().and(joystick2.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        joystick2.back().and(joystick2.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        joystick2.start().and(joystick2.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        joystick2.start().and(joystick2.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.rightBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystick2.rightBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
+    
 
     public Command getAutonomousCommand() {
         try{
