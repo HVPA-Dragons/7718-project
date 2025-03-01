@@ -3,10 +3,10 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LiftShooterSubsystem;
 
-public class IntakeCoralCommand extends Command {
+public class IntakeLevelCommand extends Command {
     private LiftShooterSubsystem liftShooterSubsystem;
 
-    public IntakeCoralCommand(LiftShooterSubsystem liftShooterSubsystem) {
+    public IntakeLevelCommand(LiftShooterSubsystem liftShooterSubsystem) {
         this.liftShooterSubsystem = liftShooterSubsystem;
 
         addRequirements(liftShooterSubsystem);
@@ -14,13 +14,14 @@ public class IntakeCoralCommand extends Command {
     
     @Override
     public void execute() {
-            liftShooterSubsystem.intakeCoral();
+        liftShooterSubsystem.intakeLevel(10, 120, 90 );;
 
 
     }
 
     @Override
     public void end(boolean interrupted) {
+        liftShooterSubsystem.StopLift();
 
     }
 }
