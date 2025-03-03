@@ -14,9 +14,9 @@ public class IntakeLevelCommand extends Command {
     
     @Override
     public void execute() {
-        liftShooterSubsystem.intakeLevel(10, 120, 90 );;
+        liftShooterSubsystem.baseLevel(0, 120, 90 );;
 
-
+    
     }
 
     @Override

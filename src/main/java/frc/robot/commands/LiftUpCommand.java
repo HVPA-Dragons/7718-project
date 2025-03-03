@@ -14,7 +14,7 @@ public class LiftUpCommand extends Command {
     
     @Override
     public void execute() {
-            liftShooterSubsystem.intakeAlgae();
+            
 
 
     }

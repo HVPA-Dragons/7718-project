@@ -23,5 +23,3 @@ public class SetScoringAngleCommand extends Command {
     public void end(boolean interrupted) {
     }
 }
-        
-

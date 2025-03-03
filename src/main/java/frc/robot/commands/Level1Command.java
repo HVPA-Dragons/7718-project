@@ -14,7 +14,7 @@ public class Level1Command extends Command {
     
     @Override
     public void execute() {
-        liftShooterSubsystem.level1(20, 90);;
+        liftShooterSubsystem.level1(12.7, 90);;
 
 
     }
@@ -25,4 +25,3 @@ public class Level1Command extends Command {
 
     }
 }
-
