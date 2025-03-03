@@ -1,14 +1,6 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
@@ -18,17 +10,14 @@ public class LiftShooterSubsystem extends SubsystemBase {
 
     private final TalonFX liftmotor1;
     private final TalonFX liftmotor2;
-    private final SparkMax shooterMotor1;
-    private final SparkMax shooterMotor2;
-    private final SparkMaxConfig shooterMotor1config;
-    private final SparkMaxConfig shooterMotor2config;
+    private final TalonFX shooterMotor1;
+    private final TalonFX shooterMotor2;
     private final Encoder liftEncoder;
     private final Encoder shooterEncoder;
     private final DigitalInput liftTopLimitSwitch;
     private final DigitalInput liftBottomLimitSwitch;
     private final DigitalInput shooterLimitSwitch;
     private final DigitalInput shooterProximitySensor1;
-
     private final PIDController shooterPID = new PIDController(0.05, 0, 0); //Tune these values
     private final PIDController liftPID = new PIDController(0.05, 0, 0); //Tune these values as well
 
@@ -36,31 +25,8 @@ public class LiftShooterSubsystem extends SubsystemBase {
     public LiftShooterSubsystem() {
         liftmotor1 = new TalonFX(14);
         liftmotor2 = new TalonFX(15);
-        shooterMotor1 = new SparkMax(17,MotorType.kBrushless);
-        shooterMotor1config = new SparkMaxConfig();
-        shooterMotor1config
-            .inverted(false)
-            .idleMode(IdleMode.kBrake);
-        shooterMotor1config.encoder
-            .positionConversionFactor(1000)
-            .velocityConversionFactor(1000);
-        shooterMotor1config.closedLoop
-            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(1.0, 0.0, 0.0);
-        shooterMotor1.configure(shooterMotor1config, ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
-        shooterMotor2 = new SparkMax(16,MotorType.kBrushless);
-        shooterMotor2config=new SparkMaxConfig();
-        shooterMotor2config
-            .inverted(false)
-            .idleMode(IdleMode.kBrake);
-        shooterMotor2config.encoder
-            .positionConversionFactor(1000)
-            .velocityConversionFactor(1000);
-        shooterMotor2config.closedLoop
-            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(1.0,0.0,0.0);
-        shooterMotor2.configure(shooterMotor2config,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
-
+        shooterMotor1 = new TalonFX(16);
+        shooterMotor2 = new TalonFX(17);
         liftEncoder = new Encoder(0, 1);
         shooterEncoder = new Encoder(2,3);
         liftTopLimitSwitch = new DigitalInput(4);
@@ -95,7 +61,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
             double currentAngle = readNormalizedShooterEncoder();
             double output = shooterPID.calculate(currentAngle, scoringAngle);
         
-            // Safety: Ensure we don't exceed limits
+            // Safety: this makes sure we dont go too far, however the scoring angle goes the opposite way, so this shouldnt matter.
             if (!shooterLimitSwitch.get()) {
                 shooterMotor1.set(0);
             } else {
@@ -103,20 +69,6 @@ public class LiftShooterSubsystem extends SubsystemBase {
             }
         }
         //public void setLift(double height)
-        public void setIntakeHeight(double intakeHeight){
-            double currentHeight = readNormalizedLiftEncoder();
-            double output = liftPID.calculate(currentHeight, intakeHeight);
-            
-            // safety: makes sure we don't exceed limits
-            if (!liftBottomLimitSwitch.get()) { 
-                liftmotor1.set(0);
-                liftmotor2.set(0);
-            } else {
-                liftmotor1.set(output);
-                liftmotor2.set(output);
-            }
-        }
-
         public void setLevel0(double troughLevel){
             double currentLevel = readNormalizedLiftEncoder();
             double output = liftPID.calculate(currentLevel, troughLevel);
@@ -298,18 +250,19 @@ public class LiftShooterSubsystem extends SubsystemBase {
             shooterMotor2.set(0);
         }
 
-        public void scoreCoral(double height, double angle) {
-            
+        public void scoreCoral(double troughLevel, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety
+            setLevel0(troughLevel); //safety
+            shootCoral();
         }
 
         public void scoreAlgae(double height, double angle) {
         
         }
         
-        public void intakeLevel(double troughLevel, double intakeAngle, double scoringAngle) {
-            setScoringAngle(scoringAngle); //safety
+        public void baseLevel(double troughLevel, double intakeAngle, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety, always be in scoring angle before you lower or raise lift.
             setLevel0(troughLevel);
-            setIntakeAngle(intakeAngle);
         }
 
         public void level1(double level1, double scoringAngle) {
@@ -329,9 +282,9 @@ public class LiftShooterSubsystem extends SubsystemBase {
 
         }
 
-        public void setIntake(double intakeHeight, double intakeAngle, double scoringAngle) {
-            setScoringAngle(scoringAngle); //safety
-            setIntakeHeight(intakeHeight);
+        public void setIntake(double troughLevel, double intakeAngle, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
+            setLevel0(troughLevel);
             setIntakeAngle(intakeAngle);
 
         }

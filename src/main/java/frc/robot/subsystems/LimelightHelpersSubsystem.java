@@ -40,7 +40,7 @@ public class LimelightHelpersSubsystem extends SubsystemBase {
     public double getTurnAdjustment() {
         double kP = 0.02; // Proportional control constant
         double tx = getTx();
-        return hasValidTarget() ? -tx * kP : 0.0;
+        return hasValidTarget() ? -tx * kP : 0.0; 
     }
 
     public void alignLimelight() {
