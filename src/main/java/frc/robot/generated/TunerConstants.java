@@ -8,7 +8,6 @@ import com.ctre.phoenix6.hardware.*;
 import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -67,10 +66,16 @@ public class TunerConstants {
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
     private static final Pigeon2Configuration pigeonConfigs = null;
+    // Define the CANivore bus for the lift and shooter motors
+    private static final CANBus cc_elevator = new CANBus("CANivore"); // the CANivore network will be for lift and shooter motors
+    private static final TalonFX liftMotor1 = new TalonFX(14, cc_elevator);
+    private static final TalonFX liftMotor2 = new TalonFX(15, cc_elevator);
+    private static final TalonFX shooterMotor1 = new TalonFX(16, cc_elevator);
+    private static final TalonFX shooterMotor2 = new TalonFX(17, cc_elevator);
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
+    public static final CANBus kCANBus = new CANBus("RIO Canbus", "./logs/example.hoot"); //the rio network will be for swervedrive
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
