@@ -21,6 +21,6 @@ public class ShootCoralCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-
+        liftShooterSubsystem.stopShootCoral();
     }
 }

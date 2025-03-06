@@ -14,7 +14,7 @@ public class ShootAlgaeCommand extends Command {
     }
     
     @Override
-    public void execute() {
+    public void execute() { 
             liftShooterSubsystem.shootAlgae();
 
 
@@ -22,5 +22,6 @@ public class ShootAlgaeCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
+            liftShooterSubsystem.stopShootAlgae();
     }
 }

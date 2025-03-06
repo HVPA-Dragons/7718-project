@@ -21,5 +21,6 @@ public class IntakeAlgaeCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        liftShooterSubsystem.stopIntakeAlgae();
     }
 }
