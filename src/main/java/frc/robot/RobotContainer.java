@@ -22,13 +22,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 //import frc.robot.commands.ReadLiftEncoderCommand;
 //import frc.robot.commands.ZeroLiftEncoderCommand;
 import frc.robot.commands.IntakeCoralCommand;
-import frc.robot.commands.StopIntakeCoralCommand;
 import frc.robot.commands.ShootCoralCommand;
-import frc.robot.commands.StopShootCoralCommand;
 import frc.robot.commands.IntakeAlgaeCommand;
-import frc.robot.commands.StopIntakeAlgaeCommand;
 import frc.robot.commands.ShootAlgaeCommand;
-import frc.robot.commands.StopShootAlgaeCommand;
 import frc.robot.commands.SetIntakeCommand;
 import frc.robot.commands.IntakeLevelCommand;
 import frc.robot.commands.SetScoringAngleCommand;
@@ -82,15 +78,11 @@ public class RobotContainer {
         //Command readLiftEncoderCommand = new ReadLiftEncoderCommand(liftShooter);
         //Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
         Command intakeCoralCommand = new IntakeCoralCommand(liftShooter);
-        Command stopIntakeCoralCommand = new StopIntakeCoralCommand(liftShooter);
         Command shootCoralCommand = new ShootCoralCommand(liftShooter);
-        Command stopShootCoralCommand = new StopShootCoralCommand(liftShooter);
         Command setIntakeCommand = new SetIntakeCommand(liftShooter);
         Command setScoringAngleCommand = new SetScoringAngleCommand(liftShooter);
         Command intakeAlgaeCommand = new IntakeAlgaeCommand(liftShooter);
-        Command stopIntakeAlgaeCommand = new StopIntakeAlgaeCommand(liftShooter);
         Command shootAlgaeCommand = new ShootAlgaeCommand(liftShooter);
-        Command stopShootAlgaeCommand = new StopShootAlgaeCommand(liftShooter);
         Command intakeLevelCommand = new IntakeLevelCommand(liftShooter);
         Command level1Command = new Level1Command(liftShooter);
         Command level2Command = new Level2Command(liftShooter);
@@ -106,15 +98,11 @@ public class RobotContainer {
         joystick.y().onTrue(level2Command); // reef level 2 
         joystick.x().onTrue(level3Command); // reef level 3
         joystick.leftTrigger().onTrue(intakeCoralCommand); // intakes coral
-        joystick.leftTrigger().onFalse(stopIntakeCoralCommand); // stops intake 
         joystick.rightTrigger().onTrue(shootCoralCommand); // shoots coral
-        joystick.rightTrigger().onFalse(stopShootCoralCommand); // stops shooter
         joystick.leftBumper().onTrue(setIntakeCommand); // sets intake height and angle
         joystick.rightBumper().onTrue(setScoringAngleCommand); // sets shooter to scoring angle
         joystick.povRight().onTrue(intakeAlgaeCommand); // intakes algae
-        joystick.povRight().onFalse(stopIntakeAlgaeCommand); // stops intake
         joystick.povLeft().onTrue(shootAlgaeCommand); // shoots algae
-        joystick.povLeft().onFalse(stopShootAlgaeCommand); // stops shooter
     
        
         
@@ -138,7 +126,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         try{
         // Load the path you want to follow using its name in the GUI
-        PathPlannerPath path = PathPlannerPath.fromPathFile("testpath");
+        PathPlannerPath path = PathPlannerPath.fromPathFile("testpath1");
 
         // Create a path following command using AutoBuilder. This will also trigger event markers.
         return AutoBuilder.followPath(path);
