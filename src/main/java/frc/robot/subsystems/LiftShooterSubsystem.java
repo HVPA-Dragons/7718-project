@@ -1,71 +1,39 @@
 package frc.robot.subsystems;
 
-import frc.robot.utils.constants;
-import frc.robot.utils.constants.liftShooterConstants;
-
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
-import edu.wpi.first.wpilibj.DigitalInput;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.servohub.config.ServoHubParameter;
-import com.revrobotics.spark.*;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LiftShooterSubsystem extends SubsystemBase {
 
     private final TalonFX liftmotor1;
     private final TalonFX liftmotor2;
-    private final Spark shooterMotor1;
-    private final SparkMax shooterMotor2;
-    private final SparkMaxConfig shooterMotor2config;
+    private final TalonFX shooterMotor1;
+    private final TalonFX shooterMotor2;
     private final Encoder liftEncoder;
     private final Encoder shooterEncoder;
     private final DigitalInput liftTopLimitSwitch;
     private final DigitalInput liftBottomLimitSwitch;
-    private final double kLiftBottom;
-    private final double kLiftTop;
-    private final double kShooterTop;
-    private final double kShooterBottom;
     private final DigitalInput shooterLimitSwitch;
     private final DigitalInput shooterProximitySensor1;
-
-
+    private final PIDController shooterPID = new PIDController(0.05, 0, 0); //Tune these values
+    private final PIDController liftPID = new PIDController(0.05, 0, 0); //Tune these values as well
 
 
     public LiftShooterSubsystem() {
         liftmotor1 = new TalonFX(14);
         liftmotor2 = new TalonFX(15);
-        shooterMotor1 = new Spark(16);
-        shooterMotor2 = new SparkMax(16,MotorType.kBrushless);
-        shooterMotor2config=new SparkMaxConfig();
-        shooterMotor2config
-            .inverted(false)
-            .idleMode(IdleMode.kBrake);
-        shooterMotor2config.encoder
-            .positionConversionFactor(1000)
-            .velocityConversionFactor(1000);
-        shooterMotor2config.closedLoop
-            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(1.0,0.0,0.0);
-        shooterMotor2.configure(shooterMotor2config,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
-
+        shooterMotor1 = new TalonFX(16);
+        shooterMotor2 = new TalonFX(17);
         liftEncoder = new Encoder(0, 1);
         shooterEncoder = new Encoder(2,3);
         liftTopLimitSwitch = new DigitalInput(4);
         liftBottomLimitSwitch = new DigitalInput(5);
         shooterLimitSwitch = new DigitalInput(6);
         shooterProximitySensor1 = new DigitalInput(7);
-        kLiftTop = constants.liftShooterConstants.kLiftTop;
-        kLiftBottom = constants.liftShooterConstants.kLiftBottom;
-        kShooterTop = constants.liftShooterConstants.kShooterTop;
-        kShooterBottom = constants.liftShooterConstants.kShooterBottom;
+        
         
 
         
@@ -89,80 +57,88 @@ public class LiftShooterSubsystem extends SubsystemBase {
             liftEncoder.reset();
         }
 
-        public void SetShooterAngle(double angle){
-            //TODO figure out how to replace this method with a PID controller
+        public void setScoringAngle(double scoringAngle) {
+            double currentAngle = readNormalizedShooterEncoder();
+            double output = shooterPID.calculate(currentAngle, scoringAngle);
+        
+            // Safety: this makes sure we dont go too far, however the scoring angle goes the opposite way, so this shouldnt matter.
             if (!shooterLimitSwitch.get()) {
-               while(readNormalizedShooterEncoder() < angle); {
-                 shooterMotor1.set(.2);
-                }
-
-                while(readNormalizedShooterEncoder() > angle); {
-                 shooterMotor1.set( -.2);
-                }
-
-                while(readNormalizedShooterEncoder() == angle); {
-                 shooterMotor1.set(0);
-                }
+                shooterMotor1.set(0);
+            } else {
+                shooterMotor1.set(output);
             }
+        }
+        //public void setLift(double height)
+        public void setLevel0(double troughLevel){
+            double currentLevel = readNormalizedLiftEncoder();
+            double output = liftPID.calculate(currentLevel, troughLevel);
 
-
-            else {
-
-                liftmotor1.set(.0);
-                liftmotor2.set(.0 );
-                System.out.println("Shooter Stopped");
-
+            // safety
+            if (!liftBottomLimitSwitch.get()) {
+                liftmotor1.set(0);
+                liftmotor2.set(0);
+            } else {
+                liftmotor1.set(output);
+                liftmotor2.set(output);
             }
         }
 
-        public void setLift(double height){
-            //TODO Replace with PID
+        public void setLevel1(double level1){
+            double currentLevel = readNormalizedLiftEncoder();
+            double output = liftPID.calculate(currentLevel, level1);
 
-            // Safety feature to ensure shooter is at appropriate angle before moving lift
-            if(readNormalizedShooterEncoder() < 20); {
+            if (!liftTopLimitSwitch.get()) {
                 liftmotor1.set(0);
                 liftmotor2.set(0);
-                SetShooterAngle(20);
-            } 
-
-            // If the lift is below set height raise the lift
-            while(readNormalizedLiftEncoder() < height) {
-                if(!liftTopLimitSwitch.get()) {
-                 liftmotor1.set(.2);
-                 liftmotor2.set(.2);
-                }
-                // Safety feature: if the limit switch is hit stop the lift
-                else {
-                 liftmotor1.set(0);
-                 liftmotor2.set(0);
-                 System.out.println("Lift Stopped-- Top Limit");
-                }
-                // Stop the lift at the correct hight
-                while(readNormalizedLiftEncoder() == height) {
-                    liftmotor1.set(0);
-                    liftmotor2.set(0);
-                }
-
+            } else {
+                liftmotor1.set(output);
+                liftmotor2.set(output);
             }
-
-            // If the lift is above set height lower the lift
-            while(readNormalizedLiftEncoder() > height) {
-                if(!liftTopLimitSwitch.get()) {
-                 liftmotor1.set(-.2);
-                 liftmotor2.set(-.2);
-                }
-                // Safety feature: if the limit switch is hit stop the lift
-                else {
-                 liftmotor1.set(0);
-                 liftmotor2.set(0);
-                 System.out.println("Lift Stopped-- Bottom Limit");
-                }
-
-            }
-
-
-            }
+        }
         
+        public void setLevel2(double level2){
+            double currentLevel = readNormalizedLiftEncoder();
+            double output = liftPID.calculate(currentLevel, level2);
+
+            if (!liftTopLimitSwitch.get()) {
+                liftmotor1.set(0);
+                liftmotor2.set(0);
+            } else {
+                liftmotor1.set(output);
+                liftmotor2.set(output);
+            }
+        }
+
+        public void setLevel3(double level3){
+            double currentLevel = readNormalizedLiftEncoder();
+            double output = liftPID.calculate(currentLevel, level3);
+
+            if (!liftTopLimitSwitch.get()) {
+                liftmotor1.set(0);
+                liftmotor2.set(0);
+            } else {
+                liftmotor1.set(output);
+                liftmotor2.set(output);
+            }
+        }
+        
+        
+        
+        public void setIntakeAngle(double intakeAngle){
+            double currentAngle = readNormalizedShooterEncoder();
+            double output = shooterPID.calculate(currentAngle, intakeAngle);
+
+            if (!shooterLimitSwitch.get()) {
+                shooterEncoder.reset();
+                shooterMotor1.set(0);
+
+            } else {
+                shooterMotor1.set(output);
+            }
+                
+        }
+        
+            
             //no manual lift (sals orders)
        
 
@@ -197,66 +173,109 @@ public class LiftShooterSubsystem extends SubsystemBase {
             System.out.println(normalized);
             return normalized;
         }
-
-        public void shootAlgae() {
-            shooterMotor2.set(1.0);
-        }
         
-        public void shootCoral() {
-            if(!shooterProximitySensor1.get()) {
-            shooterMotor2.set(-1.0);
-            }
-        }
 
         public void intakeAlgae() {
-            if(!shooterProximitySensor1.get()) {
-                shooterMotor2.set(-1.0);
-
+            System.out.println("Intake Algae Run!");
+            if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
+                    shooterMotor2.set(-1.0);
+                    }
+            else if (!shooterProximitySensor1.get()){
+                shooterMotor2.set(0);
+                }
             }
+        
+        public void stopIntakeAlgae() {
+            System.out.println("Stop Intake Algae Run!");
+            shooterMotor1.set(0);
+        }
+
+        public void shootAlgae() {
+            System.out.println("Shoot Algae!");
+            if(shooterMotor2.get()==0 && shooterProximitySensor1.get()) {
+                shooterMotor2.set(1.0);
+            }
+            else if (shooterProximitySensor1.get()){
+                shooterMotor2.set(0.0);
+            }
+        }
+
+        public void stopShootAlgae() {
+            System.out.println("Stop Shoot Algae!");
+            shooterMotor2.set(0);
         }
 
         public void intakeCoral() {
-            System.out.println("About To Check Sensor");
-            System.out.println(shooterProximitySensor1.getChannel());
-            System.out.println(shooterProximitySensor1.get());
-            System.out.println("About To Check Motor Speed");
-            System.out.println(shooterMotor2.get());
-            if(shooterProximitySensor1.get()){
-                shooterMotor2.set(1.0);
-                System.out.println("Intake");
-                }
-            else {
-                System.out.println("NOT INTAKE");
+            System.out.println("Intake Coral Run!");
+            if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
+                    shooterMotor2.set(1.0);
+                    }
+            else if (!shooterProximitySensor1.get()){
+                shooterMotor2.set(0.0);
+                
+                
+            }
+            }
+
+            
+        public void stopIntakeCoral(){
+        System.out.println("Stop Intake Coral Run!");
+        shooterMotor2.set(0);
+
+        }
+
+        public void shootCoral() {
+            System.out.println("Shoot Coral!");
+            if(shooterMotor2.get()==0 && !shooterProximitySensor1.get()) {
+            shooterMotor2.set(-1.0);
+            }
+            else if (shooterProximitySensor1.get()){
                 shooterMotor2.set(0);
             }
         }
 
+        public void stopShootCoral() {
+            System.out.print("Stop Shoot Coral");
+            shooterMotor2.set(0);
+        }
 
-        public void scoreCoral(double height, double angle) {
-         setLift(height);
-
-         SetShooterAngle(angle);
-         shootCoral();
-            
+        public void scoreCoral(double troughLevel, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety
+            setLevel0(troughLevel); //safety
+            shootCoral();
         }
 
         public void scoreAlgae(double height, double angle) {
-            setLift(height);
-   
-            SetShooterAngle(angle);
-            shootAlgae();
-               
-           }
-
-                      
         
-    
-
+        }
         
+        public void baseLevel(double troughLevel, double intakeAngle, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety, always be in scoring angle before you lower or raise lift.
+            setLevel0(troughLevel);
+        }
 
+        public void level1(double level1, double scoringAngle) {
+            setScoringAngle(scoringAngle);
+            setLevel1(level1);
+        }
 
-        
+        public void level2(double level2, double scoringAngle) {
+            setScoringAngle(scoringAngle);
+            setLevel2(level2);
 
-        
+        }
+
+        public void level3(double level3, double scoringAngle) {       
+            setScoringAngle(scoringAngle);
+            setLevel3(level3);
+
+        }
+
+        public void setIntake(double troughLevel, double intakeAngle, double scoringAngle) {
+            setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
+            setLevel0(troughLevel);
+            setIntakeAngle(intakeAngle);
+
+        }
 
     }
