@@ -206,26 +206,15 @@ public class LiftShooterSubsystem extends SubsystemBase {
         }
 
         public void intakeCoral() {
-            // System.out.println("About To Check Sensor");
-            // System.out.println(shooterProximitySensor1.getChannel());
-            // System.out.println(shooterProximitySensor1.get());
-            // System.out.println("About To Check Motor Speed");
-            // System.out.println(shooterMotor2.get());
-            // if(shooterProximitySensor1.get()){
-            //     shooterMotor2.set(1.0);
-            //     System.out.println("Intake");
-            //     }
-            // else {
-            //     System.out.println("NOT INTAKE");
-            //     shooterMotor2.set(0);
-            // }
             System.out.println("Intake Coral Run!");
             if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
                     shooterMotor2.set(1.0);
                     }
             else if (!shooterProximitySensor1.get()){
                 shooterMotor2.set(0.0);
-                }
+                
+                
+            }
             }
 
             
