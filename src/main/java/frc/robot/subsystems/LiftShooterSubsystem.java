@@ -18,8 +18,8 @@ public class LiftShooterSubsystem extends SubsystemBase {
     private final DigitalInput liftBottomLimitSwitch;
     private final DigitalInput shooterLimitSwitch;
     private final DigitalInput shooterProximitySensor1;
-    private final PIDController shooterPID = new PIDController(0.05, 0, 0); //Tune these values
-    private final PIDController liftPID = new PIDController(0.05, 0, 0); //Tune these values as well
+    private final PIDController shooterPID = new PIDController(0.0012, 0, 0); //Tune these values
+    private final PIDController liftPID = new PIDController(0.01, 0, 0); //Tune these values as well
 
 
     public LiftShooterSubsystem() {
@@ -126,7 +126,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         
         public void setIntakeAngle(double intakeAngle){
             double currentAngle = readNormalizedShooterEncoder();
-            double output = shooterPID.calculate(currentAngle, intakeAngle);
+            /*double output = shooterPID.calculate(currentAngle, intakeAngle);
 
             if (!shooterLimitSwitch.get()) {
                 shooterEncoder.reset();
@@ -134,7 +134,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
 
             } else {
                 shooterMotor1.set(output);
-            }
+            }*/
                 
         }
         
@@ -156,7 +156,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public double readNormalizedLiftEncoder() {
             // Method for normalizing encoder readings, making them easier to interact with
             double LiftPosition = liftEncoder.getDistance();
-            double angleConversionFactor = 5.69; //TODO find conversion factor for lift
+            double angleConversionFactor = 270.98; //TODO find conversion factor for lift
 
             double normalized = (LiftPosition / angleConversionFactor);
             System.out.println(normalized);
@@ -208,7 +208,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public void intakeCoral() {
             System.out.println("Intake Coral Run!");
             if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
-                    shooterMotor2.set(1.0);
+                    shooterMotor2.set(-.4);
                     }
             else if (!shooterProximitySensor1.get()){
                 shooterMotor2.set(0.0);
@@ -227,7 +227,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public void shootCoral() {
             System.out.println("Shoot Coral!");
             if(shooterMotor2.get()==0 && !shooterProximitySensor1.get()) {
-            shooterMotor2.set(-1.0);
+            shooterMotor2.set(-.75);
             }
             else if (shooterProximitySensor1.get()){
                 shooterMotor2.set(0);
@@ -272,9 +272,9 @@ public class LiftShooterSubsystem extends SubsystemBase {
         }
 
         public void setIntake(double troughLevel, double intakeAngle, double scoringAngle) {
-            setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
-            setLevel0(troughLevel);
-            setIntakeAngle(intakeAngle);
+            //setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
+            //setLevel0(troughLevel);
+            //setIntakeAngle(intakeAngle);
 
         }
 
