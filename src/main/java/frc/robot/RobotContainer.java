@@ -11,6 +11,7 @@ import java.util.Optional;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -32,6 +33,7 @@ import frc.robot.commands.AlignLimelightCommand;
 import frc.robot.commands.Level1Command;
 import frc.robot.commands.Level2Command;
 import frc.robot.commands.Level3Command;
+import frc.robot.commands.SetAlgaeAngleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LiftShooterSubsystem;
@@ -45,7 +47,7 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.2).withRotationalDeadband(MaxAngularRate * 0.5) // Add a 50% deadband
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.5) // Add a 50% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -67,8 +69,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -88,6 +90,7 @@ public class RobotContainer {
         Command level2Command = new Level2Command(liftShooter);
         Command level3Command = new Level3Command(liftShooter);
         Command alignLimelightCommand = new AlignLimelightCommand(limelightHelpers);
+        Command setAlgaeAngleCommand = new SetAlgaeAngleCommand(liftShooter);
     
        
         
@@ -103,6 +106,8 @@ public class RobotContainer {
         joystick.rightBumper().onTrue(setScoringAngleCommand); // sets shooter to scoring angle
         joystick.povRight().onTrue(intakeAlgaeCommand); // intakes algae
         joystick.povLeft().onTrue(shootAlgaeCommand); // shoots algae
+        joystick.povDown().onTrue(setAlgaeAngleCommand); // sets the algae angle for intake and shooting
+        
     
        
         
@@ -117,7 +122,7 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.rightBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        joystick.povUp().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -126,10 +131,11 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         try{
         // Load the path you want to follow using its name in the GUI
-        PathPlannerPath path = PathPlannerPath.fromPathFile("testpath1");
+        // PathPlannerPath path = PathPlannerPath.fromPathFile("testpath");
 
-        // Create a path following command using AutoBuilder. This will also trigger event markers.
-        return AutoBuilder.followPath(path);
+        // // Create a path following command using AutoBuilder. This will also trigger event markers.
+        // return AutoBuilder.followPath(path);
+        return new PathPlannerAuto("testauto");
     } catch (Exception e) {
         DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
         return Commands.none();
