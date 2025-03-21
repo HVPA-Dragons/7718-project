@@ -3,10 +3,10 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LiftShooterSubsystem;
 
-public class SetIntakeCommand extends Command {
+public class SetAlgaeAngleCommand extends Command {
     private LiftShooterSubsystem liftShooterSubsystem;
 
-    public SetIntakeCommand(LiftShooterSubsystem liftShooterSubsystem) {
+    public SetAlgaeAngleCommand(LiftShooterSubsystem liftShooterSubsystem) {
         this.liftShooterSubsystem = liftShooterSubsystem;
 
         addRequirements(liftShooterSubsystem);
@@ -14,13 +14,13 @@ public class SetIntakeCommand extends Command {
     
     @Override
     public void execute() {
-            liftShooterSubsystem.setIntake(0, 0, 40);
+            liftShooterSubsystem.setAlgaeAngle(180);
 
 
     }
 
     @Override
     public void end(boolean interrupted) {
-
+        
     }
 }

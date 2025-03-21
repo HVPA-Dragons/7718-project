@@ -14,7 +14,7 @@ public class Level3Command extends Command {
     
     @Override
     public void execute() {
-        liftShooterSubsystem.level3(54.1, 90);;
+        liftShooterSubsystem.level3(40, 50);;
 
 
     }
