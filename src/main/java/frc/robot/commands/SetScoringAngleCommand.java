@@ -14,7 +14,7 @@ public class SetScoringAngleCommand extends Command {
     
     @Override
     public void execute() {
-            liftShooterSubsystem.setScoringAngle(90);
+            liftShooterSubsystem.setScoringAngle(35);
 
 
     }
