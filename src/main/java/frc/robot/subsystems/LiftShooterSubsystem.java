@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
@@ -18,8 +20,8 @@ public class LiftShooterSubsystem extends SubsystemBase {
     private final DigitalInput liftBottomLimitSwitch;
     private final DigitalInput shooterLimitSwitch;
     private final DigitalInput shooterProximitySensor1;
-    private final PIDController shooterPID = new PIDController(0.0012, 0, 0); //Tune these values
-    private final PIDController liftPID = new PIDController(0.01, 0, 0); //Tune these values as well
+    private final PIDController shooterPID = new PIDController(0.0075, 0, 0.000017); //Tune these values
+    private final PIDController liftPID = new PIDController(0.02, 0.001, 0); //Tune these values as well
 
 
     public LiftShooterSubsystem() {
@@ -33,6 +35,9 @@ public class LiftShooterSubsystem extends SubsystemBase {
         liftBottomLimitSwitch = new DigitalInput(5);
         shooterLimitSwitch = new DigitalInput(6);
         shooterProximitySensor1 = new DigitalInput(7);
+        liftmotor1.setNeutralMode(NeutralModeValue.Brake);
+        liftmotor2.setNeutralMode(NeutralModeValue.Brake);
+
         
         
 
@@ -67,7 +72,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
             } else {
                 shooterMotor1.set(output);
             }
-        }
+        } 
         //public void setLift(double height)
         public void setLevel0(double troughLevel){
             double currentLevel = readNormalizedLiftEncoder();
@@ -80,6 +85,18 @@ public class LiftShooterSubsystem extends SubsystemBase {
             } else {
                 liftmotor1.set(output);
                 liftmotor2.set(output);
+            }
+        }
+
+        public void setAlgaeAngle(double algaeAngle){
+            double currentAngle = readNormalizedShooterEncoder();
+            double output = shooterPID.calculate(currentAngle, algaeAngle);
+
+            if (!shooterLimitSwitch.get()) {
+                shooterEncoder.reset();
+                shooterMotor1.set(0);
+            } else {
+                shooterMotor1.set(output);
             }
         }
 
@@ -126,7 +143,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         
         public void setIntakeAngle(double intakeAngle){
             double currentAngle = readNormalizedShooterEncoder();
-            /*double output = shooterPID.calculate(currentAngle, intakeAngle);
+            double output = shooterPID.calculate(currentAngle, intakeAngle);
 
             if (!shooterLimitSwitch.get()) {
                 shooterEncoder.reset();
@@ -134,7 +151,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
 
             } else {
                 shooterMotor1.set(output);
-            }*/
+            }
                 
         }
         
@@ -208,7 +225,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public void intakeCoral() {
             System.out.println("Intake Coral Run!");
             if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
-                    shooterMotor2.set(-.4);
+                    shooterMotor2.set(-.25);
                     }
             else if (!shooterProximitySensor1.get()){
                 shooterMotor2.set(0.0);
@@ -227,7 +244,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public void shootCoral() {
             System.out.println("Shoot Coral!");
             if(shooterMotor2.get()==0 && !shooterProximitySensor1.get()) {
-            shooterMotor2.set(-.75);
+            shooterMotor2.set(-.8);
             }
             else if (shooterProximitySensor1.get()){
                 shooterMotor2.set(0);
@@ -272,9 +289,9 @@ public class LiftShooterSubsystem extends SubsystemBase {
         }
 
         public void setIntake(double troughLevel, double intakeAngle, double scoringAngle) {
-            //setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
-            //setLevel0(troughLevel);
-            //setIntakeAngle(intakeAngle);
+            setScoringAngle(scoringAngle); //safety, we must be in scoring angle to lower or raise lift.
+            setLevel0(troughLevel);
+            setIntakeAngle(intakeAngle);
 
         }
 
