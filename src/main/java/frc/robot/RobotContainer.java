@@ -4,64 +4,97 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-
-import java.util.Optional;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-//import frc.robot.commands.LiftUpCommand;
-//import frc.robot.commands.ReadLiftEncoderCommand;
-//import frc.robot.commands.ZeroLiftEncoderCommand;
-import frc.robot.commands.IntakeCoralCommand;
-import frc.robot.commands.ShootCoralCommand;
 import frc.robot.commands.IntakeAlgaeCommand;
-import frc.robot.commands.ShootAlgaeCommand;
-import frc.robot.commands.SetIntakeCommand;
+import frc.robot.commands.IntakeCoralCommand;
 import frc.robot.commands.IntakeLevelCommand;
-import frc.robot.commands.SetScoringAngleCommand;
-import frc.robot.commands.AlignLimelightCommand;
 import frc.robot.commands.Level1Command;
 import frc.robot.commands.Level2Command;
 import frc.robot.commands.Level3Command;
 import frc.robot.commands.SetAlgaeAngleCommand;
+import frc.robot.commands.SetIntakeCommand;
+import frc.robot.commands.SetScoringAngleCommand;
+import frc.robot.commands.ShootAlgaeCommand;
+import frc.robot.commands.ShootCoralCommand;
+//import frc.robot.commands.LiftUpCommand;
+//import frc.robot.commands.ReadLiftEncoderCommand;
+import frc.robot.commands.ZeroLiftEncoderCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LiftShooterSubsystem;
-import frc.robot.subsystems.LimelightHelpersSubsystem;
+import frc.robot.subsystems.LimelightHelperSubsystem;
+import frc.robot.commands.SetIntakeAngleCommand;
+import frc.robot.commands.AlignToAprilTagCommand;
+import frc.robot.commands.AutoIntakeCommand;
+import frc.robot.commands.ReadShooterEncoderCommand;
+
 
 
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private final LiftShooterSubsystem liftShooter = new LiftShooterSubsystem();
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.5) // Add a 50% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+        .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.5) // Add a 50% deadband
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-
+    
     private final Telemetry logger = new Telemetry(MaxSpeed);
-
+    
     private final CommandXboxController joystick = new CommandXboxController(0);
     //private final CommandXboxController joystick2 = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
+    public final LimelightHelperSubsystem limelight = new LimelightHelperSubsystem();
     public RobotContainer() {
+        Command shootCoralCommand = new ShootCoralCommand(liftShooter);
+        Command intakeCoralCommand = new IntakeCoralCommand(liftShooter);
+        Command level3Command = new Level3Command(liftShooter);
+        Command level2Command = new Level2Command(liftShooter);
+        Command level1Command = new Level1Command(liftShooter);
+        Command intakeLevelCommand = new IntakeLevelCommand(liftShooter);
+        Command intakeAlgaeCommand = new IntakeAlgaeCommand(liftShooter);
+        Command setIntakeAngleCommand = new SetIntakeAngleCommand(liftShooter);
+        Command autoIntakeCommand = new AutoIntakeCommand(liftShooter);
+        Command alignToAprilTagCommand = new AlignToAprilTagCommand(drivetrain, limelight);
+
+        NamedCommands.registerCommand("shootCoral", shootCoralCommand.withTimeout(2.0));
+        NamedCommands.registerCommand("intakeCoral", intakeCoralCommand.withTimeout(2.0));
+        NamedCommands.registerCommand("level3", level3Command.withTimeout(3.0));
+        NamedCommands.registerCommand("level2", level2Command.withTimeout(2.0));
+        NamedCommands.registerCommand("level1", level1Command.withTimeout(1.0));
+        NamedCommands.registerCommand("intakeLevel", intakeLevelCommand.withTimeout(1.0));
+        NamedCommands.registerCommand("intakeAlgae", intakeAlgaeCommand.withTimeout(4.0));
+        NamedCommands.registerCommand("setIntakeAngle", setIntakeAngleCommand.withTimeout(4.0));
+        NamedCommands.registerCommand("autoIntake", autoIntakeCommand.withTimeout(1.0));
+
+        
+        chooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Mode", chooser);
         configureBindings();
-    }
+}
+
+
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
@@ -71,14 +104,12 @@ public class RobotContainer {
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                    .withRotationalRate(joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
-        var liftShooter = new LiftShooterSubsystem();
-        var limelightHelpers = new LimelightHelpersSubsystem();
         //Command liftUpCommand = new LiftUpCommand(liftShooter);
         //Command readLiftEncoderCommand = new ReadLiftEncoderCommand(liftShooter);
-        //Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
+        Command zeroLiftEncoderCommand = new ZeroLiftEncoderCommand(liftShooter);
         Command intakeCoralCommand = new IntakeCoralCommand(liftShooter);
         Command shootCoralCommand = new ShootCoralCommand(liftShooter);
         Command setIntakeCommand = new SetIntakeCommand(liftShooter);
@@ -89,13 +120,16 @@ public class RobotContainer {
         Command level1Command = new Level1Command(liftShooter);
         Command level2Command = new Level2Command(liftShooter);
         Command level3Command = new Level3Command(liftShooter);
-        Command alignLimelightCommand = new AlignLimelightCommand(limelightHelpers);
         Command setAlgaeAngleCommand = new SetAlgaeAngleCommand(liftShooter);
-    
-       
-        
+        Command readShooterEncoderCommand = new ReadShooterEncoderCommand(liftShooter);
+        Command alignToAprilTagCommand = new AlignToAprilTagCommand(drivetrain, limelight);
+        /*
 
-        //joystick2.a().onTrue(alignLimelightCommand); // Press A to align with AprilTag
+         This is where we put our joystick bindings
+
+
+        */
+        //joystick.a().onTrue(alignToAprilTagCommand);
         joystick.a().onTrue(intakeLevelCommand); // trough level
         joystick.b().onTrue(level1Command); // reef level 1 and algae processor
         joystick.y().onTrue(level2Command); // reef level 2 
@@ -107,6 +141,8 @@ public class RobotContainer {
         joystick.povRight().onTrue(intakeAlgaeCommand); // intakes algae
         joystick.povLeft().onTrue(shootAlgaeCommand); // shoots algae
         joystick.povDown().onTrue(setAlgaeAngleCommand); // sets the algae angle for intake and shooting
+        joystick.leftStick().onTrue(zeroLiftEncoderCommand); // zeros lift encoder for less fault
+        //joystick.rightTrigger().onTrue(readShooterEncoderCommand);
         
     
        
@@ -125,20 +161,14 @@ public class RobotContainer {
         joystick.povUp().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+        
     }
     
-
+    private final SendableChooser<Command> chooser;
     public Command getAutonomousCommand() {
-        try{
-        // Load the path you want to follow using its name in the GUI
-        // PathPlannerPath path = PathPlannerPath.fromPathFile("testpath");
+        return chooser.getSelected();
 
-        // // Create a path following command using AutoBuilder. This will also trigger event markers.
-        // return AutoBuilder.followPath(path);
-        return new PathPlannerAuto("testauto");
-    } catch (Exception e) {
-        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
-        return Commands.none();
     }
-    }
+            
 }
+              
