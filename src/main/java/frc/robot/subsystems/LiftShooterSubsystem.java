@@ -1,15 +1,23 @@
 package frc.robot.subsystems;
 
+
+
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+
+import edu.wpi.first.apriltag.AprilTagDetector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
+
 public class LiftShooterSubsystem extends SubsystemBase {
 
+   
     private final TalonFX liftmotor1;
     private final TalonFX liftmotor2;
     private final TalonFX shooterMotor1;
@@ -20,7 +28,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
     private final DigitalInput liftBottomLimitSwitch;
     private final DigitalInput shooterLimitSwitch;
     private final DigitalInput shooterProximitySensor1;
-    private final PIDController shooterPID = new PIDController(0.0075, 0, 0.000017); //Tune these values
+    private final PIDController shooterPID = new PIDController(0.007, 0, 0.000017); //Tune these values
     private final PIDController liftPID = new PIDController(0.02, 0.001, 0); //Tune these values as well
 
 
@@ -37,7 +45,8 @@ public class LiftShooterSubsystem extends SubsystemBase {
         shooterProximitySensor1 = new DigitalInput(7);
         liftmotor1.setNeutralMode(NeutralModeValue.Brake);
         liftmotor2.setNeutralMode(NeutralModeValue.Brake);
-
+        shooterMotor1.setNeutralMode(NeutralModeValue.Brake);
+        
         
         
 
@@ -46,6 +55,13 @@ public class LiftShooterSubsystem extends SubsystemBase {
     
 
     }
+
+        public void DetectTag() {
+ 
+        }
+    
+
+        
     
         public void StopLift() {
             liftmotor1.set(0);
@@ -139,7 +155,18 @@ public class LiftShooterSubsystem extends SubsystemBase {
             }
         }
         
-        
+        public void autoIntake(){
+            if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
+                shooterMotor2.set(-.5);
+
+                }
+        else if (!shooterProximitySensor1.get()){
+            shooterMotor2.set(0.0);
+
+            
+        }
+        }
+    
         
         public void setIntakeAngle(double intakeAngle){
             double currentAngle = readNormalizedShooterEncoder();
@@ -226,9 +253,11 @@ public class LiftShooterSubsystem extends SubsystemBase {
             System.out.println("Intake Coral Run!");
             if (shooterMotor2.get()==0 && shooterProximitySensor1.get()){
                     shooterMotor2.set(-.25);
+    
                     }
             else if (!shooterProximitySensor1.get()){
                 shooterMotor2.set(0.0);
+
                 
                 
             }
@@ -244,7 +273,7 @@ public class LiftShooterSubsystem extends SubsystemBase {
         public void shootCoral() {
             System.out.println("Shoot Coral!");
             if(shooterMotor2.get()==0 && !shooterProximitySensor1.get()) {
-            shooterMotor2.set(-.8);
+            shooterMotor2.set(-.3);
             }
             else if (shooterProximitySensor1.get()){
                 shooterMotor2.set(0);
@@ -256,9 +285,9 @@ public class LiftShooterSubsystem extends SubsystemBase {
             shooterMotor2.set(0);
         }
 
-        public void scoreCoral(double troughLevel, double scoringAngle) {
+        public void scoreCoral(double level2, double scoringAngle) {
             setScoringAngle(scoringAngle); //safety
-            setLevel0(troughLevel); //safety
+            setLevel2(level2); //safety
             shootCoral();
         }
 
